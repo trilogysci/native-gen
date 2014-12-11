@@ -38,13 +38,19 @@ abstract data KnownTypesParser = KnownTypesParser
 main [] = do
   print "Enter class name: "
   stdout.flush
-  className <- getLine
-  main [className]
-  
-main [className] = main [className, "types.properties"]
+  classFile <- getLine
+  main [classFile]
 
-main (className: typesFileName: _) = do
+main [classFile] = main [classFile, "types.properties"]
+
+main (classFile: typesFileName: _) = do
   knownTypes <- KnownTypesParser.parseKnownTypes typesFileName
-  clazzEither <- Class.forName className
-  let clazz = either throw id clazzEither
-  println $ genFrege knownTypes clazz
+  contents <- readFile classFile
+  let classNames = lines contents
+  println $ show classNames
+  mapM_ (\a -> procClass knownTypes a) classNames
+
+procClass knownTypes className = do
+    clazzEither <- Class.forName className
+    let clazz = either throw id clazzEither
+    println $ genFrege2 knownTypes clazz
